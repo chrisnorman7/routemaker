@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../providers.dart';
-import 'home_page.dart';
+import 'routes_screen.dart';
 
 /// A widget to check location service permissions.
 class ServicePermissionsScreen extends ConsumerStatefulWidget {
@@ -45,7 +45,7 @@ class ServicePermissionsScreenState
             error: 'Unable to determine location permissions.',
           );
         } else {
-          return const HomePage();
+          return const RoutesScreen();
         }
       },
       error: (final error, final stackTrace) => ErrorScreen(
