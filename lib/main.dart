@@ -17,12 +17,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(final BuildContext context) {
     RendererBinding.instance.setSemanticsEnabled(true);
-    return MaterialApp(
-      title: 'Routemaker',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+    return ProviderScope(
+      child: MaterialApp(
+        title: 'Routemaker',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ),
+        home: const ServiceEnabledScreen(),
       ),
-      home: const ProviderScope(child: ServiceEnabledScreen()),
     );
   }
 }
