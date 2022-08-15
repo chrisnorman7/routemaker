@@ -12,7 +12,7 @@ part 'stored_route.g.dart';
 @JsonSerializable()
 class StoredRoute {
   /// Create an instance.
-  const StoredRoute({
+  StoredRoute({
     required this.name,
     required this.points,
   });
@@ -22,7 +22,7 @@ class StoredRoute {
       _$StoredRouteFromJson(json);
 
   /// The name of this route.
-  final String name;
+  String name;
 
   /// The points along this route.
   final List<RoutePoint> points;

@@ -36,3 +36,10 @@ final appOptionsProvider = FutureProvider((final ref) async {
   final json = jsonDecode(data) as Map<String, dynamic>;
   return AppOptions.fromJson(json);
 });
+
+/// Save the app options.
+Future<void> saveAppOptions(final WidgetRef ref) async {
+  final sharedPreferences = await ref.watch(sharedPreferencesProvider.future);
+  final appOptions = await ref.watch(appOptionsProvider.future);
+  await appOptions.save(sharedPreferences);
+}

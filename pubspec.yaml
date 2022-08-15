@@ -9,7 +9,7 @@ environment:
   sdk: ">=2.18.0 <3.0.0"
 
 dependencies:
-  backstreets_widgets: ^0.1.0
+  backstreets_widgets: ^0.2.0
   cupertino_icons: ^1.0.2
   flutter:
     sdk: flutter
