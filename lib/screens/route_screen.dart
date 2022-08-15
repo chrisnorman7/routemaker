@@ -1,3 +1,4 @@
+import 'package:backstreets_widgets/icons.dart';
 import 'package:backstreets_widgets/screens.dart';
 import 'package:backstreets_widgets/shortcuts.dart';
 import 'package:backstreets_widgets/util.dart';
@@ -11,6 +12,7 @@ import '../providers.dart';
 import '../src/json/route_point.dart';
 import '../src/json/stored_route.dart';
 import '../util.dart';
+import '../validators.dart';
 import 'create_point_consumer.dart';
 
 /// A screen to display the given [route].
@@ -35,29 +37,48 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
   @override
   Widget build(final BuildContext context) {
     final provider = ref.watch(positionStreamProvider);
-    return SimpleScaffold(
-      title: widget.route.name,
-      body: provider.when(
-        data: getBody,
-        error: (final error, final stackTrace) =>
-            ErrorScreen(error: error, stackTrace: stackTrace),
-        loading: LoadingScreen.new,
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => pushWidget(
-            context: context,
-            builder: (final context) => GetText(
-              onDone: (final value) async {
-                Navigator.pop(context);
-                widget.route.name = value;
-                await saveAppOptions(ref);
-              },
+    return Cancel(
+      child: CallbackShortcuts(
+        bindings: {newShortcut: newPoint},
+        child: SimpleScaffold(
+          title: widget.route.name,
+          body: provider.when(
+            data: getBody,
+            error: (final error, final stackTrace) => ErrorScreen(
+              error: error,
+              stackTrace: stackTrace,
             ),
+            loading: LoadingScreen.new,
           ),
-          child: const Text('Rename'),
-        )
-      ],
+          actions: [
+            TextButton(
+              onPressed: () => pushWidget(
+                context: context,
+                builder: (final context) => GetText(
+                  onDone: (final value) async {
+                    Navigator.pop(context);
+                    widget.route.name = value;
+                    await saveAppOptions(ref);
+                    ref.refresh(appOptionsProvider);
+                  },
+                  labelText: 'Route Name',
+                  text: widget.route.name,
+                  title: 'Rename Route',
+                  validator: (final value) =>
+                      validateNonEmptyValue(value: value),
+                ),
+              ),
+              child: const Text('Rename'),
+            )
+          ],
+          floatingActionButton: FloatingActionButton(
+            autofocus: widget.route.points.isEmpty,
+            onPressed: newPoint,
+            tooltip: 'Add A Route Point',
+            child: addIcon,
+          ),
+        ),
+      ),
     );
   }
 
@@ -99,12 +120,14 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
       child: ListView.builder(
         itemBuilder: (final context, final index) {
           final object = points[index];
+          final point = object.point;
           return CallbackShortcuts(
-            bindings: {deleteShortcut: () => deletePoint(object.point)},
+            bindings: {deleteShortcut: () => deletePoint(point)},
             child: CopyListTile(
               title: object.point.name,
               subtitle: sensibleDistance(object.distance),
               autofocus: index == 0,
+              onLongPress: () => deletePoint(point),
             ),
           );
         },

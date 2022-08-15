@@ -48,8 +48,9 @@ class RoutesScreenState extends ConsumerState<RoutesScreen> {
           ),
           floatingActionButton: FloatingActionButton(
             autofocus: data.routes.isEmpty,
-            child: addIcon,
             onPressed: () => createRoute(ref: ref, options: data),
+            tooltip: 'Add New Route',
+            child: addIcon,
           ),
         ),
         error: (final error, final stackTrace) => ErrorScreen(

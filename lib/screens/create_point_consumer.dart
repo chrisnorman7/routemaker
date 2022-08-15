@@ -1,6 +1,10 @@
+import 'package:backstreets_widgets/icons.dart';
 import 'package:backstreets_widgets/screens.dart';
+import 'package:backstreets_widgets/shortcuts.dart';
+import 'package:backstreets_widgets/util.dart';
 import 'package:backstreets_widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -43,23 +47,49 @@ class CreatePointState extends ConsumerState<CreatePoint> {
   /// Build the widget.
   @override
   Widget build(final BuildContext context) {
+    final currentPosition = _position;
     final provider = ref.watch(positionStreamProvider);
-    return SimpleScaffold(
-      title: 'Add Point',
-      body: provider.when(
-        data: (final data) {
-          final currentPosition = _position;
-          if (currentPosition == null ||
-              data.accuracy < currentPosition.accuracy) {
-            _position = data;
-          }
-          return getBody(currentPosition ?? data);
-        },
-        error: (final error, final stackTrace) => ErrorListView(
-          error: error,
-          stackTrace: stackTrace,
+    return Cancel(
+      child: SimpleScaffold(
+        title: 'Add Point',
+        body: provider.when(
+          data: (final data) {
+            final currentPosition = _position;
+            if (currentPosition == null ||
+                data.accuracy < currentPosition.accuracy) {
+              _position = data;
+            }
+            return CallbackShortcuts(
+              bindings: {
+                SingleActivator(
+                  LogicalKeyboardKey.keyS,
+                  control: useControlKey,
+                  meta: useMetaKey,
+                ): savePoint
+              },
+              child: getBody(currentPosition ?? data),
+            );
+          },
+          error: (final error, final stackTrace) => ErrorListView(
+            error: error,
+            stackTrace: stackTrace,
+          ),
+          loading: LoadingWidget.new,
         ),
-        loading: LoadingWidget.new,
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            if (currentPosition == null) {
+              showMessage(
+                context: context,
+                message: 'Please wait for GPS to register coordinates.',
+              );
+            } else {
+              savePoint();
+            }
+          },
+          tooltip: 'Save Point',
+          child: saveIcon,
+        ),
       ),
     );
   }
@@ -73,6 +103,7 @@ class CreatePointState extends ConsumerState<CreatePoint> {
               pointName = value;
             }),
             header: 'Name',
+            autofocus: true,
             validator: (final value) => validateNonEmptyValue(value: value),
           ),
           CopyListTile(
@@ -83,10 +114,27 @@ class CreatePointState extends ConsumerState<CreatePoint> {
             title: 'Longitude',
             subtitle: position.longitude.toString(),
           ),
-          CopyListTile(
-            title: 'Accuracy',
-            subtitle: sensibleDistance(position.accuracy),
+          Semantics(
+            liveRegion: true,
+            child: CopyListTile(
+              title: 'Accuracy',
+              subtitle: sensibleDistance(position.accuracy),
+            ),
           )
         ],
       );
+
+  /// Save the current point.
+  void savePoint() {
+    final position = _position!;
+    Navigator.pop(context);
+    widget.onDone(
+      RoutePoint(
+        name: pointName,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        accuracy: position.accuracy,
+      ),
+    );
+  }
 }
