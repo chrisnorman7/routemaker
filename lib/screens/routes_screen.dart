@@ -47,9 +47,7 @@ class RoutesScreenState extends ConsumerState<RoutesScreen> {
         data: (final options) => SimpleScaffold(
           title: 'Routes',
           body: CallbackShortcuts(
-            bindings: {
-              newShortcut: () => createRoute(ref: ref, options: options)
-            },
+            bindings: {newShortcut: () => newRoute(options)},
             child: positionProvider.when(
               data: (final position) => getBody(
                 currentPosition: position,
@@ -64,7 +62,7 @@ class RoutesScreenState extends ConsumerState<RoutesScreen> {
           ),
           floatingActionButton: FloatingActionButton(
             autofocus: options.routes.isEmpty,
-            onPressed: () => createRoute(ref: ref, options: options),
+            onPressed: () => newRoute(options),
             tooltip: 'Add New Route',
             child: addIcon,
           ),
@@ -79,10 +77,7 @@ class RoutesScreenState extends ConsumerState<RoutesScreen> {
   }
 
   /// Create a new route, and save the [options].
-  Future<void> createRoute({
-    required final WidgetRef ref,
-    required final AppOptions options,
-  }) async {
+  Future<void> newRoute(final AppOptions options) async {
     final route = StoredRoute(name: 'Untitled Route', points: []);
     options.routes.add(route);
     await saveAppOptions(ref);
