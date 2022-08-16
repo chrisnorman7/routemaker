@@ -21,7 +21,7 @@ class AppOptions {
       _$AppOptionsFromJson(json);
 
   /// The preferences key to use.
-  static const preferencesKey = 'app_preferences';
+  static const preferencesKey = 'routemaker_app_preferences';
 
   /// The defined routes.
   List<StoredRoute> routes;
