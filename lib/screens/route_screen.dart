@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
-import '../point_and_distance.dart';
+import '../distance_and.dart';
 import '../providers.dart';
 import '../src/json/route_point.dart';
 import '../src/json/stored_route.dart';
@@ -36,7 +36,7 @@ class RouteScreen extends ConsumerStatefulWidget {
 /// State for [RouteScreen].
 class RouteScreenState extends ConsumerState<RouteScreen> {
   /// The nearest point.
-  PointAndDistance? _nearestPoint;
+  DistanceAnd? _nearestPoint;
 
   /// Build the widget.
   @override
@@ -100,9 +100,9 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
     final latitude = position.latitude;
     final longitude = position.longitude;
     final points = widget.route.points
-        .map<PointAndDistance>(
-          (final e) => PointAndDistance(
-            point: e,
+        .map<DistanceAnd<RoutePoint>>(
+          (final e) => DistanceAnd<RoutePoint>(
+            value: e,
             distance: max(
               0,
               Geolocator.distanceBetween(
@@ -129,7 +129,7 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
     } else if (oldNearestPoint != nearestPoint) {
       _nearestPoint = nearestPoint;
       vibrate();
-      speak(ref: ref, text: nearestPoint.point.name);
+      speak(ref: ref, text: nearestPoint.value.name);
     }
     return WithKeyboardShortcuts(
       keyboardShortcuts: const [
@@ -146,7 +146,7 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
       child: ListView.builder(
         itemBuilder: (final context, final index) {
           final object = points[index];
-          final point = object.point;
+          final point = object.value;
           final distance = object.distance;
           final bearing = getDirectionName(
             Geolocator.bearingBetween(
@@ -159,7 +159,7 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
           return CallbackShortcuts(
             bindings: {deleteShortcut: () => deletePoint(point)},
             child: ListTile(
-              title: Text(object.point.name),
+              title: Text(object.value.name),
               subtitle: Semantics(
                 liveRegion: index == 0,
                 child: Text(
