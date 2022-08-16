@@ -1,16 +1,9 @@
-# routemaker
+# Routemaker
 
-A app for building your own routes.
+An app for building your own routes.
 
-## Getting Started
+## Description
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This is an extremely simple app, which allows you to make custom GPS routes. The
+distance between your points is constrained by the accuracy of the GPS on your
+device.
