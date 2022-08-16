@@ -1,7 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'providers.dart';
+
+/// The JSON encoder to use.
+const indentedJsonEncoder = JsonEncoder.withIndent('  ');
 
 /// Th3e names of the cardinal directions.
 const directionNames = [
@@ -44,4 +49,15 @@ Future<void> speak({
 }) async {
   final tts = ref.watch(ttsProvider);
   return tts.speak(text);
+}
+
+/// Get a sensible distance.
+String getDistance({
+  required final double distance,
+  required final double accuracy,
+}) {
+  if (distance < accuracy) {
+    return 'Within ${sensibleDistance(accuracy)}';
+  }
+  return sensibleDistance(distance);
 }

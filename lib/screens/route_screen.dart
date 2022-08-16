@@ -8,6 +8,7 @@ import 'package:backstreets_widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../distance_and.dart';
 import '../providers.dart';
@@ -35,8 +36,8 @@ class RouteScreen extends ConsumerStatefulWidget {
 
 /// State for [RouteScreen].
 class RouteScreenState extends ConsumerState<RouteScreen> {
-  /// The nearest point.
-  DistanceAnd? _nearestPoint;
+  /// The most recently announced point.
+  RoutePoint? _lastAnnouncedPoint;
 
   /// Build the widget.
   @override
@@ -56,12 +57,15 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
             loading: LoadingScreen.new,
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                vibrate();
-                speak(ref: ref, text: 'Testing, testing, 1, 2, 3.');
-              },
-              child: const Text('Vibrate'),
+            IconButton(
+              onPressed: () => Share.share(
+                indentedJsonEncoder.convert(widget.route.toJson()),
+                subject: 'Route JSON',
+              ),
+              icon: const Icon(
+                Icons.share,
+                semanticLabel: 'Share JSON',
+              ),
             ),
             TextButton(
               onPressed: () => pushWidget(
@@ -122,14 +126,16 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
     if (points.isEmpty) {
       return const CenterText(text: 'This route has no points.');
     }
-    final oldNearestPoint = _nearestPoint;
     final nearestPoint = points.first;
-    if (oldNearestPoint == null) {
-      _nearestPoint = nearestPoint;
-    } else if (oldNearestPoint != nearestPoint) {
-      _nearestPoint = nearestPoint;
-      vibrate();
-      speak(ref: ref, text: nearestPoint.value.name);
+    if (nearestPoint.distance <= 5.0) {
+      final lastAnnounced = _lastAnnouncedPoint;
+      if (lastAnnounced == null || lastAnnounced != nearestPoint.value) {
+        _lastAnnouncedPoint = nearestPoint.value;
+        vibrate();
+        speak(ref: ref, text: '$accuracy: ${nearestPoint.value.name}');
+      }
+    } else {
+      _lastAnnouncedPoint = null;
     }
     return WithKeyboardShortcuts(
       keyboardShortcuts: const [

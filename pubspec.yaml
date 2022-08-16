@@ -17,6 +17,7 @@ dependencies:
   flutter_tts: ^3.5.0
   geolocator: ^9.0.1
   json_annotation: ^4.6.0
+  share_plus: ^4.0.10+1
   shared_preferences: ^2.0.15
 
 dev_dependencies:

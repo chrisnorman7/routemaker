@@ -5,10 +5,13 @@ import 'package:backstreets_widgets/util.dart';
 import 'package:backstreets_widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 
+import '../distance_and.dart';
 import '../providers.dart';
 import '../src/json/app_options.dart';
 import '../src/json/stored_route.dart';
+import '../util.dart';
 import 'route_screen.dart';
 
 /// A screen to show all the loaded routes.
@@ -26,7 +29,8 @@ class RoutesScreenState extends ConsumerState<RoutesScreen> {
   /// Build the widget.
   @override
   Widget build(final BuildContext context) {
-    final provider = ref.watch(appOptionsProvider);
+    final optionsProvider = ref.watch(appOptionsProvider);
+    final positionProvider = ref.watch(positionStreamProvider);
     return WithKeyboardShortcuts(
       keyboardShortcuts: const [
         KeyboardShortcut(
@@ -39,16 +43,28 @@ class RoutesScreenState extends ConsumerState<RoutesScreen> {
           keyName: 'Delete',
         )
       ],
-      child: provider.when(
-        data: (final data) => SimpleScaffold(
+      child: optionsProvider.when(
+        data: (final options) => SimpleScaffold(
           title: 'Routes',
           body: CallbackShortcuts(
-            bindings: {newShortcut: () => createRoute(ref: ref, options: data)},
-            child: getBody(data),
+            bindings: {
+              newShortcut: () => createRoute(ref: ref, options: options)
+            },
+            child: positionProvider.when(
+              data: (final position) => getBody(
+                currentPosition: position,
+                options: options,
+              ),
+              error: (final error, final stackTrace) => ErrorListView(
+                error: error,
+                stackTrace: stackTrace,
+              ),
+              loading: LoadingWidget.new,
+            ),
           ),
           floatingActionButton: FloatingActionButton(
-            autofocus: data.routes.isEmpty,
-            onPressed: () => createRoute(ref: ref, options: data),
+            autofocus: options.routes.isEmpty,
+            onPressed: () => createRoute(ref: ref, options: options),
             tooltip: 'Add New Route',
             child: addIcon,
           ),
@@ -67,21 +83,40 @@ class RoutesScreenState extends ConsumerState<RoutesScreen> {
     required final WidgetRef ref,
     required final AppOptions options,
   }) async {
-    options.routes.add(StoredRoute(name: 'Untitled Route', points: []));
+    final route = StoredRoute(name: 'Untitled Route', points: []);
+    options.routes.add(route);
     await saveAppOptions(ref);
+    await pushWidget(
+      context: context,
+      builder: (final context) => RouteScreen(route: route),
+    );
     setState(() {});
   }
 
   /// Get the body of this widget.
-  Widget getBody(final AppOptions options) {
-    final routes = options.routes;
+  Widget getBody({
+    required final Position currentPosition,
+    required final AppOptions options,
+  }) {
+    final routes = options.routes
+        .map<DistanceAnd<StoredRoute>>(
+          (final e) => DistanceAnd(
+            value: e,
+            distance: e.getDistanceFrom(currentPosition) ?? 0.0,
+          ),
+        )
+        .toList()
+      ..sort(
+        (final a, final b) => a.distance.compareTo(b.distance),
+      );
     if (routes.isEmpty) {
       return const CenterText(text: 'There are no routes to show.');
     }
     return BuiltSearchableListView(
       items: routes,
       builder: (final context, final index) {
-        final route = routes[index];
+        final object = routes[index];
+        final route = object.value;
         return SearchableListTile(
           searchString: route.name,
           child: CallbackShortcuts(
@@ -90,6 +125,10 @@ class RoutesScreenState extends ConsumerState<RoutesScreen> {
             },
             child: PushWidgetListTile(
               title: route.name,
+              subtitle: getDistance(
+                distance: object.distance,
+                accuracy: currentPosition.accuracy,
+              ),
               builder: (final context) => RouteScreen(route: route),
               autofocus: index == 0,
               onLongPress: () => deleteRoute(options: options, route: route),

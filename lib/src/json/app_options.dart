@@ -1,14 +1,11 @@
-import 'dart:convert';
-
 import 'package:json_annotation/json_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../util.dart';
 import 'route_point.dart';
 import 'stored_route.dart';
 
 part 'app_options.g.dart';
-
-const _jsonEncoder = JsonEncoder.withIndent('  ');
 
 /// The options for the application.
 @JsonSerializable()
@@ -37,7 +34,7 @@ class AppOptions {
 
   /// Save the options.
   Future<void> save(final SharedPreferences sharedPreferences) async {
-    final data = _jsonEncoder.convert(toJson());
+    final data = indentedJsonEncoder.convert(toJson());
     await sharedPreferences.setString(preferencesKey, data);
   }
 }
