@@ -127,7 +127,7 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
       return const CenterText(text: 'This route has no points.');
     }
     final nearestPoint = points.first;
-    if (nearestPoint.distance <= 5.0) {
+    if (nearestPoint.distance <= position.accuracy) {
       final lastAnnounced = _lastAnnouncedPoint;
       if (lastAnnounced == null || lastAnnounced != nearestPoint.value) {
         _lastAnnouncedPoint = nearestPoint.value;
@@ -155,12 +155,14 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
           final point = object.value;
           final distance = object.distance;
           final bearing = getDirectionName(
-            Geolocator.bearingBetween(
-              latitude,
-              longitude,
-              point.latitude,
-              point.longitude,
-            ),
+            (Geolocator.bearingBetween(
+                      latitude,
+                      longitude,
+                      point.latitude,
+                      point.longitude,
+                    ) -
+                    position.heading) %
+                360,
           );
           return CallbackShortcuts(
             bindings: {deleteShortcut: () => deletePoint(point)},
