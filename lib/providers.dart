@@ -31,7 +31,7 @@ final sharedPreferencesProvider = FutureProvider(
 final appOptionsProvider = FutureProvider((final ref) async {
   final sharedPreferences = await ref.watch(sharedPreferencesProvider.future);
   final data = sharedPreferences.getString(AppOptions.preferencesKey);
-  if (data == null) {
+  if (data == null || data.isEmpty) {
     return AppOptions(routes: []);
   }
   final json = jsonDecode(data) as Map<String, dynamic>;
