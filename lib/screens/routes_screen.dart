@@ -4,6 +4,7 @@ import 'package:backstreets_widgets/shortcuts.dart';
 import 'package:backstreets_widgets/util.dart';
 import 'package:backstreets_widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -12,6 +13,7 @@ import '../providers.dart';
 import '../src/json/app_options.dart';
 import '../src/json/stored_route.dart';
 import '../util.dart';
+import 'import_route_screen.dart';
 import 'route_screen.dart';
 
 /// A screen to show all the loaded routes.
@@ -47,7 +49,14 @@ class RoutesScreenState extends ConsumerState<RoutesScreen> {
         data: (final options) => SimpleScaffold(
           title: 'Routes',
           body: CallbackShortcuts(
-            bindings: {newShortcut: () => newRoute(options)},
+            bindings: {
+              newShortcut: () => newRoute(options),
+              SingleActivator(
+                LogicalKeyboardKey.keyI,
+                control: useControlKey,
+                meta: useMetaKey,
+              ): () => importRoute(options)
+            },
             child: positionProvider.when(
               data: (final position) => getBody(
                 currentPosition: position,
@@ -60,11 +69,18 @@ class RoutesScreenState extends ConsumerState<RoutesScreen> {
               loading: LoadingWidget.new,
             ),
           ),
-          floatingActionButton: FloatingActionButton(
-            autofocus: options.routes.isEmpty,
-            onPressed: () => newRoute(options),
-            tooltip: 'Add New Route',
-            child: addIcon,
+          floatingActionButton: Column(
+            children: [
+              TextButton(
+                onPressed: () => importRoute(options),
+                child: const Text('Import Route'),
+              ),
+              IconButton(
+                autofocus: options.routes.isEmpty,
+                onPressed: () => newRoute(options),
+                icon: addIcon,
+              ),
+            ],
           ),
         ),
         error: (final error, final stackTrace) => ErrorScreen(
@@ -87,6 +103,18 @@ class RoutesScreenState extends ConsumerState<RoutesScreen> {
     );
     setState(() {});
   }
+
+  /// Import a new route.
+  Future<void> importRoute(final AppOptions options) => pushWidget(
+        context: context,
+        builder: (final context) => ImportRouteScreen(
+          onDone: (final value) async {
+            options.routes.add(value);
+            await saveAppOptions(ref);
+            setState(() {});
+          },
+        ),
+      );
 
   /// Get the body of this widget.
   Widget getBody({
