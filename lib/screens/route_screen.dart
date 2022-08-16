@@ -164,27 +164,19 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
           );
           return CallbackShortcuts(
             bindings: {deleteShortcut: () => deletePoint(point)},
-            child: ListTile(
-              title: Text(object.value.name),
-              subtitle: Semantics(
-                liveRegion: index == 0,
-                child: Text(
-                  distance == 0
-                      ? 'Within $accuracy'
-                      : '${sensibleDistance(distance)} $bearing',
-                ),
-              ),
+            child: PushWidgetListTile(
+              title: object.value.name,
+              subtitle: distance == 0
+                  ? 'Within $accuracy'
+                  : '${sensibleDistance(distance)} $bearing',
               autofocus: index == 0,
-              onTap: () => pushWidget(
-                context: context,
-                builder: (final context) => GetText(
-                  onDone: (final value) {
-                    Navigator.pop(context);
-                    point.name = value;
-                    saveAppOptions(ref);
-                    setState(() {});
-                  },
-                ),
+              builder: (final context) => GetText(
+                onDone: (final value) {
+                  Navigator.pop(context);
+                  point.name = value;
+                  saveAppOptions(ref);
+                  setState(() {});
+                },
               ),
               onLongPress: () => deletePoint(point),
             ),
