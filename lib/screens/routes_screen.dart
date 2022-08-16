@@ -1,4 +1,3 @@
-import 'package:backstreets_widgets/icons.dart';
 import 'package:backstreets_widgets/screens.dart';
 import 'package:backstreets_widgets/shortcuts.dart';
 import 'package:backstreets_widgets/util.dart';
@@ -69,16 +68,23 @@ class RoutesScreenState extends ConsumerState<RoutesScreen> {
               loading: LoadingWidget.new,
             ),
           ),
-          floatingActionButton: Column(
+          floatingActionButton: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton(
+              IconButton(
                 onPressed: () => importRoute(options),
-                child: const Text('Import Route'),
+                icon: const Icon(
+                  Icons.import_export,
+                  semanticLabel: 'Import Route',
+                ),
               ),
               IconButton(
-                autofocus: options.routes.isEmpty,
                 onPressed: () => newRoute(options),
-                icon: addIcon,
+                icon: const Icon(
+                  Icons.add,
+                  semanticLabel: 'Add Route',
+                ),
               ),
             ],
           ),
@@ -133,7 +139,10 @@ class RoutesScreenState extends ConsumerState<RoutesScreen> {
         (final a, final b) => a.distance.compareTo(b.distance),
       );
     if (routes.isEmpty) {
-      return const CenterText(text: 'There are no routes to show.');
+      return const CenterText(
+        text: 'There are no routes to show.',
+        autofocus: true,
+      );
     }
     return BuiltSearchableListView(
       items: routes,
