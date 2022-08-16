@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -43,3 +44,6 @@ Future<void> saveAppOptions(final WidgetRef ref) async {
   final appOptions = await ref.watch(appOptionsProvider.future);
   await appOptions.save(sharedPreferences);
 }
+
+/// Get the TTS system.
+final ttsProvider = Provider((final ref) => FlutterTts());

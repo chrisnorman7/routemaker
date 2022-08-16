@@ -6,7 +6,7 @@ part 'route_point.g.dart';
 @JsonSerializable()
 class RoutePoint {
   /// Create an instance.
-  const RoutePoint({
+  RoutePoint({
     required this.name,
     required this.latitude,
     required this.longitude,
@@ -18,7 +18,7 @@ class RoutePoint {
       _$RoutePointFromJson(json);
 
   /// The name of this point.
-  final String name;
+  String name;
 
   /// The latitude coordinate of this point.
   final double latitude;

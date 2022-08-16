@@ -13,4 +13,16 @@ class PointAndDistance {
 
   /// The distance between the current location and [point].
   final double distance;
+
+  /// Use the [hashCode] of [point].
+  @override
+  int get hashCode => point.hashCode;
+
+  @override
+  bool operator ==(final Object other) {
+    if (other is PointAndDistance) {
+      return point == other.point;
+    }
+    return super == other;
+  }
 }

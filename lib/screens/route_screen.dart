@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:backstreets_widgets/icons.dart';
 import 'package:backstreets_widgets/screens.dart';
 import 'package:backstreets_widgets/shortcuts.dart';
@@ -13,7 +15,7 @@ import '../src/json/route_point.dart';
 import '../src/json/stored_route.dart';
 import '../util.dart';
 import '../validators.dart';
-import 'create_point_consumer.dart';
+import 'create_point.dart';
 
 /// A screen to display the given [route].
 class RouteScreen extends ConsumerStatefulWidget {
@@ -33,6 +35,9 @@ class RouteScreen extends ConsumerStatefulWidget {
 
 /// State for [RouteScreen].
 class RouteScreenState extends ConsumerState<RouteScreen> {
+  /// The nearest point.
+  PointAndDistance? _nearestPoint;
+
   /// Build the widget.
   @override
   Widget build(final BuildContext context) {
@@ -51,6 +56,13 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
             loading: LoadingScreen.new,
           ),
           actions: [
+            TextButton(
+              onPressed: () {
+                vibrate();
+                speak(ref: ref, text: 'Testing, testing, 1, 2, 3.');
+              },
+              child: const Text('Vibrate'),
+            ),
             TextButton(
               onPressed: () => pushWidget(
                 context: context,
@@ -84,17 +96,22 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
 
   /// Display the body for this widget.
   Widget getBody(final Position position) {
+    final accuracy = sensibleDistance(position.accuracy);
     final latitude = position.latitude;
     final longitude = position.longitude;
     final points = widget.route.points
         .map<PointAndDistance>(
           (final e) => PointAndDistance(
             point: e,
-            distance: Geolocator.distanceBetween(
-              latitude,
-              longitude,
-              e.latitude,
-              e.longitude,
+            distance: max(
+              0,
+              Geolocator.distanceBetween(
+                    latitude,
+                    longitude,
+                    e.latitude,
+                    e.longitude,
+                  ) -
+                  position.accuracy,
             ),
           ),
         )
@@ -104,6 +121,15 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
       );
     if (points.isEmpty) {
       return const CenterText(text: 'This route has no points.');
+    }
+    final oldNearestPoint = _nearestPoint;
+    final nearestPoint = points.first;
+    if (oldNearestPoint == null) {
+      _nearestPoint = nearestPoint;
+    } else if (oldNearestPoint != nearestPoint) {
+      _nearestPoint = nearestPoint;
+      vibrate();
+      speak(ref: ref, text: nearestPoint.point.name);
     }
     return WithKeyboardShortcuts(
       keyboardShortcuts: const [
@@ -121,12 +147,39 @@ class RouteScreenState extends ConsumerState<RouteScreen> {
         itemBuilder: (final context, final index) {
           final object = points[index];
           final point = object.point;
+          final distance = object.distance;
+          final bearing = getDirectionName(
+            Geolocator.bearingBetween(
+              latitude,
+              longitude,
+              point.latitude,
+              point.longitude,
+            ),
+          );
           return CallbackShortcuts(
             bindings: {deleteShortcut: () => deletePoint(point)},
-            child: CopyListTile(
-              title: object.point.name,
-              subtitle: sensibleDistance(object.distance),
+            child: ListTile(
+              title: Text(object.point.name),
+              subtitle: Semantics(
+                liveRegion: index == 0,
+                child: Text(
+                  distance == 0
+                      ? 'Within $accuracy'
+                      : '${sensibleDistance(distance)} $bearing',
+                ),
+              ),
               autofocus: index == 0,
+              onTap: () => pushWidget(
+                context: context,
+                builder: (final context) => GetText(
+                  onDone: (final value) {
+                    Navigator.pop(context);
+                    point.name = value;
+                    saveAppOptions(ref);
+                    setState(() {});
+                  },
+                ),
+              ),
               onLongPress: () => deletePoint(point),
             ),
           );

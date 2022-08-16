@@ -14,6 +14,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_riverpod: ^1.0.4
+  flutter_tts: ^3.5.0
   geolocator: ^9.0.1
   json_annotation: ^4.6.0
   shared_preferences: ^2.0.15
